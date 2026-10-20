@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>தமிழ் டப்பிங் - YouTube</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--tx:#1d2433;--pr:#c0392b;--bd:#dde1ea}
+@media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1c212c;--tx:#e8ebf2;--bd:#323a4a}}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Noto Sans Tamil',system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+.w{max-width:760px;margin:auto;padding:14px}
+h1{font-size:20px;margin:6px 0 12px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px}
+button{padding:10px 16px;border:0;border-radius:8px;background:var(--pr);color:#fff;font:inherit;cursor:pointer}
+button.g{background:#6b7280}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.v{position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden}
+.v>div,.v iframe{position:absolute;inset:0;width:100%;height:100%}
+#now{font-size:18px;line-height:1.6;min-height:60px;margin-top:10px;padding:10px;border-radius:8px;background:var(--bg)}
+#st{font-size:13px;opacity:.8;margin-top:6px}
+#list{max-height:220px;overflow:auto;font-size:13px}
+#list div{padding:5px;border-bottom:1px solid var(--bd);cursor:pointer}
+#list div.on{background:var(--pr);color:#fff}
+label{font-size:13px}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>🎙️ தமிழ் டப்பிங் டூல்</h1>
+
+<div class="c">
+  <input id="api" placeholder="Apps Script Web App URL (ஒருமுறை மட்டும்)">
+  <input id="url" placeholder="YouTube லிங்க் இங்கே ஒட்டவும்">
+  <div class="row">
+    <button id="go">தமிழில் மாற்று</button>
+    <button class="g" id="exp">JSON சேமி</button>
+  </div>
+  <div id="st"></div>
+</div>
+
+<div class="c" id="pc" style="display:none">
+  <div class="v"><div id="yt"></div></div>
+  <div class="row" style="margin-top:10px">
+    <button id="pp">▶ / ⏸</button>
+    <label>அசல் ஒலி <input type="range" id="vol" min="0" max="60" value="0" style="width:90px"></label>
+    <label>வேகம் <input type="range" id="spd" min="0.8" max="1.6" step="0.1" value="1" style="width:90px"></label>
+  </div>
+  <select id="voice"></select>
+  <div id="now"></div>
+</div>
+
+<div class="c" id="lc" style="display:none"><div id="list"></div></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+let segs=[],player=null,cur=-1,timer=null,voices=[],data=null;
+
+const DEFAULT_API='https://script.google.com/macros/s/AKfycbyd72YokjJMy3eYQkUEYxjk1QCFf6cFqVv9j7ka0oMjYcOI6lzE_CpQOafe88ZoLc5-/exec';
+$('api').value=DEFAULT_API;
+const vid=u=>{const m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/);return m?m[1]:null};
+const st=t=>$('st').textContent=t;
+
+// ---- குரல்கள் ----
+function loadVoices(){
+  voices=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('ta'));
+  $('voice').innerHTML=voices.length?voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join(''):'<option>⚠ தமிழ் குரல் இல்லை - போன்/PC Settings-ல் Tamil TTS நிறுவவும்</option>';
+}
+speechSynthesis.onvoiceschanged=loadVoices;loadVoices();
+
+// ---- தரவு பெறுதல் ----
+$('go').onclick=async()=>{
+  const api=$('api').value.trim(),id=vid($('url').value.trim());
+  if(!api)return st('Apps Script URL கொடுக்கவும்');
+  if(!id)return st('சரியான YouTube லிங்க் இல்லை');
+  store('dub_api',api);st('சப்டைட்டில் எடுத்து மொழிபெயர்க்கிறது... (சில விநாடிகள்)');
+  try{
+    const r=await fetch(api+'?v='+id);data=await r.json();
+    if(data.error)throw data.error;
+    segs=data.segs;data.id=id;st(`✓ ${segs.length} வாக்கியங்கள் (மூல மொழி: ${data.lang})`);
+    show(id);
+  }catch(e){st('பிழை: '+e)}
+};
+$('exp').onclick=()=>{if(!data)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='tamil_dub_'+data.id+'.json';a.click()};
+
+// ---- பிளேயர் ----
+function show(id){
+  $('pc').style.display=$('lc').style.display='block';
+  $('list').innerHTML=segs.map((s,i)=>`<div id="s${i}" onclick="seek(${i})">${fmt(s.s)} ${s.t}</div>`).join('');
+  if(player){player.loadVideoById(id);return}
+  const t=document.createElement('script');t.src='https://www.youtube.com/iframe_api';document.head.appendChild(t);
+  window.onYouTubeIframeAPIReady=()=>{player=new YT.Player('yt',{videoId:id,playerVars:{playsinline:1},events:{onReady:()=>{player.setVolume(0);start()},onStateChange:e=>{if(e.data!==1)speechSynthesis.cancel()}}})};
+}
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+window.seek=i=>{speechSynthesis.cancel();cur=i-1;player.seekTo(segs[i].s,true);player.playVideo()};
+$('pp').onclick=()=>{if(!player)return;player.getPlayerState()===1?player.pauseVideo():player.playVideo()};
+$('vol').oninput=e=>player&&player.setVolume(+e.target.value);
+
+function start(){
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(!player||!player.getCurrentTime||player.getPlayerState()!==1)return;
+    const t=player.getCurrentTime();let i=segs.findIndex((s,k)=>t>=s.s&&(k===segs.length-1||t<segs[k+1].s));
+    if(i<0||i===cur)return;
+    if(Math.abs(i-cur)>1)speechSynthesis.cancel();
+    cur=i;say(i);
+  },200);
+}
+
+function say(i){
+  const s=segs[i];$('now').textContent=s.t;
+  document.querySelectorAll('#list .on').forEach(e=>e.classList.remove('on'));
+  const el=$('s'+i);if(el){el.classList.add('on');el.scrollIntoView({block:'nearest'})}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(s.t);u.lang='ta-IN';
+  const v=voices[$('voice').value||0];if(v)u.voice=v;
+  // பேச்சு நீளம் அதிகமாக இருந்தால் வேகத்தை கூட்டு
+  const need=s.t.length/ (13*(+$('spd').value)); // ~13 எழுத்து/விநாடி
+  u.rate=Math.min(1.8,Math.max(+$('spd').value,need>s.d?need/s.d*(+$('spd').value):+$('spd').value));
+  speechSynthesis.speak(u);
+}
+</script>
+</body>
+</html>
