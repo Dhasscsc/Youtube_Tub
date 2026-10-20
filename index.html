@@ -1,127 +1,39 @@
-<!DOCTYPE html>
-<html lang="ta">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>தமிழ் டப்பிங் - YouTube</title>
-<style>
-:root{--bg:#f5f6fa;--card:#fff;--tx:#1d2433;--pr:#c0392b;--bd:#dde1ea}
-@media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1c212c;--tx:#e8ebf2;--bd:#323a4a}}
-*{box-sizing:border-box}
-body{margin:0;font-family:'Noto Sans Tamil',system-ui,sans-serif;background:var(--bg);color:var(--tx)}
-.w{max-width:760px;margin:auto;padding:14px}
-h1{font-size:20px;margin:6px 0 12px}
-.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
-input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;margin-bottom:8px}
-button{padding:10px 16px;border:0;border-radius:8px;background:var(--pr);color:#fff;font:inherit;cursor:pointer}
-button.g{background:#6b7280}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.v{position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden}
-.v>div,.v iframe{position:absolute;inset:0;width:100%;height:100%}
-#now{font-size:18px;line-height:1.6;min-height:60px;margin-top:10px;padding:10px;border-radius:8px;background:var(--bg)}
-#st{font-size:13px;opacity:.8;margin-top:6px}
-#list{max-height:220px;overflow:auto;font-size:13px}
-#list div{padding:5px;border-bottom:1px solid var(--bd);cursor:pointer}
-#list div.on{background:var(--pr);color:#fff}
-label{font-size:13px}
-</style>
-</head>
-<body>
-<div class="w">
-<h1>🎙️ தமிழ் டப்பிங் டூல்</h1>
-
-<div class="c">
-  <input id="api" placeholder="Apps Script Web App URL (ஒருமுறை மட்டும்)">
-  <input id="url" placeholder="YouTube லிங்க் இங்கே ஒட்டவும்">
-  <div class="row">
-    <button id="go">தமிழில் மாற்று</button>
-    <button class="g" id="exp">JSON சேமி</button>
-  </div>
-  <div id="st"></div>
-</div>
-
-<div class="c" id="pc" style="display:none">
-  <div class="v"><div id="yt"></div></div>
-  <div class="row" style="margin-top:10px">
-    <button id="pp">▶ / ⏸</button>
-    <label>அசல் ஒலி <input type="range" id="vol" min="0" max="60" value="0" style="width:90px"></label>
-    <label>வேகம் <input type="range" id="spd" min="0.8" max="1.6" step="0.1" value="1" style="width:90px"></label>
-  </div>
-  <select id="voice"></select>
-  <div id="now"></div>
-</div>
-
-<div class="c" id="lc" style="display:none"><div id="list"></div></div>
-</div>
-
-<script>
-const $=id=>document.getElementById(id);
-const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
-let segs=[],player=null,cur=-1,timer=null,voices=[],data=null;
-
-const DEFAULT_API='https://script.google.com/macros/s/AKfycbyd72YokjJMy3eYQkUEYxjk1QCFf6cFqVv9j7ka0oMjYcOI6lzE_CpQOafe88ZoLc5-/exec';
-$('api').value=DEFAULT_API;
-const vid=u=>{const m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/);return m?m[1]:null};
-const st=t=>$('st').textContent=t;
-
-// ---- குரல்கள் ----
-function loadVoices(){
-  voices=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('ta'));
-  $('voice').innerHTML=voices.length?voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join(''):'<option>⚠ தமிழ் குரல் இல்லை - போன்/PC Settings-ல் Tamil TTS நிறுவவும்</option>';
+<!DOCTYPE html><html lang="ta"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>தமிழ் டப்பிங் - நிறுவல்</title>
+<style>body{font-family:'Noto Sans Tamil',system-ui,sans-serif;max-width:720px;margin:auto;padding:16px;line-height:1.7}
+a.b{display:inline-block;background:#c0392b;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-size:18px}
+textarea{width:100%;height:120px;font-size:12px}</style></head><body>
+<h2>🎙️ தமிழ் டப்பிங் (YouTube பக்கத்திலேயே)</h2>
+<ol>
+<li>Apps Script-ல் புதிய <b>DubCode.gs</b> ஒட்டி, New version ஆக Deploy செய்யவும்.</li>
+<li>கீழே உள்ள சிவப்பு பொத்தானை <b>Bookmarks bar-க்கு இழுத்து</b> விடவும்.</li>
+<li>YouTube வீடியோவைத் திறந்து, அந்த Bookmark-ஐ அழுத்தவும். (மீண்டும் அழுத்தினால் நிற்கும்)</li>
+</ol>
+<p><a class="b" href="javascript:(()%3D%3E%7B%0Aif(window.__dub)%7Bwindow.__dub.stop()%3Breturn%7D%0Aconst%20API%3D'https%3A%2F%2Fscript.google.com%2Fmacros%2Fs%2FAKfycbyd72YokjJMy3eYQkUEYxjk1QCFf6cFqVv9j7ka0oMjYcOI6lzE_CpQOafe88ZoLc5-%2Fexec'%3B%0Aconst%20v%3Ddocument.querySelector('video')%3Bif(!v)%7Balert('YouTube%20%E0%AE%B5%E0%AF%80%E0%AE%9F%E0%AE%BF%E0%AE%AF%E0%AF%8B%20%E0%AE%AA%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%AA%E0%AE%AF%E0%AE%A9%E0%AF%8D%E0%AE%AA%E0%AE%9F%E0%AF%81%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%B5%E0%AF%81%E0%AE%AE%E0%AF%8D')%3Breturn%7D%0Aconst%20cc%3Ddocument.querySelector('.ytp-subtitles-button')%3B%0Aif(cc%26%26cc.getAttribute('aria-pressed')%3D%3D%3D'false')cc.click()%3B%0Aconst%20box%3Ddocument.createElement('div')%3B%0Abox.style.cssText%3D'position%3Afixed%3Bleft%3A50%25%3Bbottom%3A90px%3Btransform%3AtranslateX(-50%25)%3Bmax-width%3A80%25%3Bz-index%3A99999%3Bbackground%3Argba(0%2C0%2C0%2C.85)%3Bcolor%3A%23ffe45c%3Bfont%3A600%2020px%20sans-serif%3Bpadding%3A8px%2014px%3Bborder-radius%3A8px%3Btext-align%3Acenter'%3B%0Abox.textContent%3D'%F0%9F%8E%99%EF%B8%8F%20%E0%AE%A4%E0%AE%AE%E0%AE%BF%E0%AE%B4%E0%AF%8D%20%E0%AE%9F%E0%AE%AA%E0%AF%8D%E0%AE%AA%E0%AE%BF%E0%AE%99%E0%AF%8D%20%E0%AE%A4%E0%AF%8A%E0%AE%9F%E0%AE%99%E0%AF%8D%E0%AE%95%E0%AE%BF%E0%AE%AF%E0%AE%A4%E0%AF%81%20(CC%20%E0%AE%87%E0%AE%AF%E0%AE%95%E0%AF%8D%E0%AE%95%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BF%E0%AE%B2%E0%AF%8D%20%E0%AE%87%E0%AE%B0%E0%AF%81%E0%AE%95%E0%AF%8D%E0%AE%95%20%E0%AE%B5%E0%AF%87%E0%AE%A3%E0%AF%8D%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D)'%3B%0Adocument.body.appendChild(box)%3B%0Aconst%20ov%3Dv.volume%3Bv.volume%3D0.08%3B%0Alet%20last%3D''%2Ctm%3Dnull%2Cvoice%3Dnull%3Bconst%20cache%3D%7B%7D%3B%0Aconst%20pick%3D()%3D%3E%7Bvoice%3DspeechSynthesis.getVoices().find(x%3D%3Ex.lang.toLowerCase().startsWith('ta'))%7D%3Bpick()%3BspeechSynthesis.onvoiceschanged%3Dpick%3B%0Aconst%20read%3D()%3D%3E%5B...document.querySelectorAll('.ytp-caption-segment')%5D.map(x%3D%3Ex.textContent).join('%20').replace(%2F%5Cs%2B%2Fg%2C'%20').trim()%3B%0Aasync%20function%20tr(t)%7Bif(cache%5Bt%5D)return%20cache%5Bt%5D%3Bconst%20r%3Dawait%20fetch(API%2B'%3Ftr%3D'%2BencodeURIComponent(t))%3Bconst%20j%3Dawait%20r.json()%3Bif(j.error)throw%20j.error%3Breturn%20cache%5Bt%5D%3Dj.t%7D%0Aasync%20function%20handle(t)%7B%0A%20try%7Bconst%20ta%3Dawait%20tr(t)%3Bif(t!%3D%3Dlast)return%3Bbox.textContent%3Dta%3BspeechSynthesis.cancel()%3B%0A%20%20const%20u%3Dnew%20SpeechSynthesisUtterance(ta)%3Bu.lang%3D'ta-IN'%3Bif(voice)u.voice%3Dvoice%3Bu.rate%3D1.15%3BspeechSynthesis.speak(u)%7D%0A%20catch(e)%7Bbox.textContent%3D'%E0%AE%AA%E0%AE%BF%E0%AE%B4%E0%AF%88%3A%20'%2Be%7D%0A%7D%0Aconst%20obs%3Dnew%20MutationObserver(()%3D%3E%7BclearTimeout(tm)%3Btm%3DsetTimeout(()%3D%3E%7Bconst%20t%3Dread()%3Bif(t%26%26t!%3D%3Dlast)%7Blast%3Dt%3Bhandle(t)%7D%7D%2C350)%7D)%3B%0Aobs.observe(document.querySelector('%23movie_player')%7C%7Cdocument.body%2C%7BchildList%3Atrue%2Csubtree%3Atrue%2CcharacterData%3Atrue%7D)%3B%0Av.addEventListener('pause'%2C()%3D%3EspeechSynthesis.cancel())%3B%0Awindow.__dub%3D%7Bstop()%7Bobs.disconnect()%3BspeechSynthesis.cancel()%3Bv.volume%3Dov%3Bbox.remove()%3Bdelete%20window.__dub%7D%7D%3B%0A%7D)()%3B%0A">🎙️ தமிழ் டப்பிங்</a></p>
+<p>Bookmark வேலை செய்யாவிட்டால்: YouTube பக்கத்தில் F12 → Console-ல் இந்த code ஐ ஒட்டி Enter:</p>
+<textarea readonly onclick="this.select()">(()=>{
+if(window.__dub){window.__dub.stop();return}
+const API='https://script.google.com/macros/s/AKfycbyd72YokjJMy3eYQkUEYxjk1QCFf6cFqVv9j7ka0oMjYcOI6lzE_CpQOafe88ZoLc5-/exec';
+const v=document.querySelector('video');if(!v){alert('YouTube வீடியோ பக்கத்தில் பயன்படுத்தவும்');return}
+const cc=document.querySelector('.ytp-subtitles-button');
+if(cc&&cc.getAttribute('aria-pressed')==='false')cc.click();
+const box=document.createElement('div');
+box.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);max-width:80%;z-index:99999;background:rgba(0,0,0,.85);color:#ffe45c;font:600 20px sans-serif;padding:8px 14px;border-radius:8px;text-align:center';
+box.textContent='🎙️ தமிழ் டப்பிங் தொடங்கியது (CC இயக்கத்தில் இருக்க வேண்டும்)';
+document.body.appendChild(box);
+const ov=v.volume;v.volume=0.08;
+let last='',tm=null,voice=null;const cache={};
+const pick=()=>{voice=speechSynthesis.getVoices().find(x=>x.lang.toLowerCase().startsWith('ta'))};pick();speechSynthesis.onvoiceschanged=pick;
+const read=()=>[...document.querySelectorAll('.ytp-caption-segment')].map(x=>x.textContent).join(' ').replace(/\s+/g,' ').trim();
+async function tr(t){if(cache[t])return cache[t];const r=await fetch(API+'?tr='+encodeURIComponent(t));const j=await r.json();if(j.error)throw j.error;return cache[t]=j.t}
+async function handle(t){
+ try{const ta=await tr(t);if(t!==last)return;box.textContent=ta;speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(ta);u.lang='ta-IN';if(voice)u.voice=voice;u.rate=1.15;speechSynthesis.speak(u)}
+ catch(e){box.textContent='பிழை: '+e}
 }
-speechSynthesis.onvoiceschanged=loadVoices;loadVoices();
-
-// ---- தரவு பெறுதல் ----
-$('go').onclick=async()=>{
-  const api=$('api').value.trim(),id=vid($('url').value.trim());
-  if(!api)return st('Apps Script URL கொடுக்கவும்');
-  if(!id)return st('சரியான YouTube லிங்க் இல்லை');
-  store('dub_api',api);st('சப்டைட்டில் எடுத்து மொழிபெயர்க்கிறது... (சில விநாடிகள்)');
-  try{
-    const r=await fetch(api+'?v='+id);data=await r.json();
-    if(data.error)throw data.error;
-    segs=data.segs;data.id=id;st(`✓ ${segs.length} வாக்கியங்கள் (மூல மொழி: ${data.lang})`);
-    show(id);
-  }catch(e){st('பிழை: '+e)}
-};
-$('exp').onclick=()=>{if(!data)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='tamil_dub_'+data.id+'.json';a.click()};
-
-// ---- பிளேயர் ----
-function show(id){
-  $('pc').style.display=$('lc').style.display='block';
-  $('list').innerHTML=segs.map((s,i)=>`<div id="s${i}" onclick="seek(${i})">${fmt(s.s)} ${s.t}</div>`).join('');
-  if(player){player.loadVideoById(id);return}
-  const t=document.createElement('script');t.src='https://www.youtube.com/iframe_api';document.head.appendChild(t);
-  window.onYouTubeIframeAPIReady=()=>{player=new YT.Player('yt',{videoId:id,playerVars:{playsinline:1},events:{onReady:()=>{player.setVolume(0);start()},onStateChange:e=>{if(e.data!==1)speechSynthesis.cancel()}}})};
-}
-const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
-window.seek=i=>{speechSynthesis.cancel();cur=i-1;player.seekTo(segs[i].s,true);player.playVideo()};
-$('pp').onclick=()=>{if(!player)return;player.getPlayerState()===1?player.pauseVideo():player.playVideo()};
-$('vol').oninput=e=>player&&player.setVolume(+e.target.value);
-
-function start(){
-  clearInterval(timer);
-  timer=setInterval(()=>{
-    if(!player||!player.getCurrentTime||player.getPlayerState()!==1)return;
-    const t=player.getCurrentTime();let i=segs.findIndex((s,k)=>t>=s.s&&(k===segs.length-1||t<segs[k+1].s));
-    if(i<0||i===cur)return;
-    if(Math.abs(i-cur)>1)speechSynthesis.cancel();
-    cur=i;say(i);
-  },200);
-}
-
-function say(i){
-  const s=segs[i];$('now').textContent=s.t;
-  document.querySelectorAll('#list .on').forEach(e=>e.classList.remove('on'));
-  const el=$('s'+i);if(el){el.classList.add('on');el.scrollIntoView({block:'nearest'})}
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(s.t);u.lang='ta-IN';
-  const v=voices[$('voice').value||0];if(v)u.voice=v;
-  // பேச்சு நீளம் அதிகமாக இருந்தால் வேகத்தை கூட்டு
-  const need=s.t.length/ (13*(+$('spd').value)); // ~13 எழுத்து/விநாடி
-  u.rate=Math.min(1.8,Math.max(+$('spd').value,need>s.d?need/s.d*(+$('spd').value):+$('spd').value));
-  speechSynthesis.speak(u);
-}
-</script>
-</body>
-</html>
+const obs=new MutationObserver(()=>{clearTimeout(tm);tm=setTimeout(()=>{const t=read();if(t&&t!==last){last=t;handle(t)}},350)});
+obs.observe(document.querySelector('#movie_player')||document.body,{childList:true,subtree:true,characterData:true});
+v.addEventListener('pause',()=>speechSynthesis.cancel());
+window.__dub={stop(){obs.disconnect();speechSynthesis.cancel();v.volume=ov;box.remove();delete window.__dub}};
+})();
+</textarea>
+</body></html>
