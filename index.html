@@ -1,39 +1,127 @@
 <!DOCTYPE html>
-<html lang="ta"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>தமிழ் டப்பிங் குரல்</title>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>தமிழ் சப்டைட்டில் டிவி</title>
 <style>
-body{font-family:'Noto Sans Tamil',system-ui,sans-serif;margin:0;padding:14px;background:#f5f6fa;color:#1d2433}
-@media (prefers-color-scheme:dark){body{background:#12151c;color:#e8ebf2}}
-button{padding:12px 18px;border:0;border-radius:8px;background:#c0392b;color:#fff;font:inherit;font-size:16px;cursor:pointer}
-select{width:100%;padding:8px;margin:8px 0;font:inherit}
-#tx{font-size:20px;line-height:1.6;min-height:90px;margin-top:10px;padding:10px;border-radius:8px;background:rgba(128,128,128,.15)}
-#st{font-size:13px;opacity:.8}
-</style></head><body>
-<h3>🎙️ தமிழ் டப்பிங் குரல்</h3>
-<div id="st">YouTube tab-ல் Bookmark/Console code ஓட்டவும். இந்த window-ஐ மூடாமல் வைக்கவும்.</div>
-<button id="on">🔊 குரலை இயக்கு</button>
-<select id="voice"></select>
-<label>வேகம் <input type="range" id="spd" min="0.8" max="1.8" step="0.1" value="1.1"></label>
-<div id="tx">காத்திருக்கிறது...</div>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:'Noto Sans Tamil',Arial,sans-serif;overflow:hidden}
+#bar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;gap:10px;padding:12px;background:rgba(0,0,0,.85);flex-wrap:wrap}
+#bar input{flex:1;min-width:220px;font-size:22px;padding:10px;border-radius:8px;border:2px solid #555;background:#111;color:#fff}
+#bar button{font-size:22px;padding:10px 18px;border-radius:8px;border:0;background:#e53935;color:#fff;cursor:pointer}
+#bar button:focus,#bar input:focus{outline:3px solid #ffd54f}
+#wrap{position:fixed;inset:0}
+#wrap iframe,#wrap #pl{width:100%;height:100%;border:0}
+#sub{position:fixed;left:5%;right:5%;bottom:7%;text-align:center;z-index:4;pointer-events:none;
+font-size:38px;line-height:1.35;font-weight:700;text-shadow:0 0 6px #000,0 0 6px #000,2px 2px 4px #000}
+#sub span{background:rgba(0,0,0,.6);padding:4px 14px;border-radius:8px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+#list{position:fixed;top:72px;left:0;right:0;bottom:0;z-index:3;background:#000;overflow:auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-content:start}
+#list button{background:#1a1a1a;color:#fff;border:3px solid transparent;border-radius:12px;padding:0;text-align:left;cursor:pointer;font-family:inherit;overflow:hidden}
+#list button:focus,#list button:hover{border-color:#ffd54f;outline:0}
+#list .card{display:flex;flex-direction:column;gap:6px}
+#list .del{padding:8px;text-align:center;font-size:17px;background:#3a1a1a}
+#list img{width:100%;display:block}
+#list span{display:block;padding:10px;font-size:18px;line-height:1.3}
+#msg{position:fixed;top:90px;left:0;right:0;text-align:center;z-index:5;font-size:22px;color:#ffd54f}
+</style>
+</head>
+<body>
+<div id="bar">
+  <input id="url" placeholder="YouTube லிங்க் ஒட்டவும்" inputmode="url">
+  <button id="go">▶ தொடங்கு</button>
+  <button id="sm">A−</button><button id="lg">A+</button>
+  <button id="ls">📋 பட்டியல்</button>
+  <button id="cfg">⚙</button>
+  <button id="hide">⛶ மறை</button>
+</div>
+<div id="msg"></div>
+<div id="list"></div>
+<div id="wrap"><div id="pl"></div></div>
+<div id="sub"><span></span></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-const API='https://script.google.com/macros/s/AKfycbyd72YokjJMy3eYQkUEYxjk1QCFf6cFqVv9j7ka0oMjYcOI6lzE_CpQOafe88ZoLc5-/exec';
-const YT='https://www.youtube.com',$=id=>document.getElementById(id);
-let ready=false,cache={},voices=[];
-function lv(){voices=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith('ta'));
- $('voice').innerHTML=voices.length?voices.map((v,i)=>'<option value="'+i+'">'+v.name+'</option>').join(''):'<option>⚠ தமிழ் குரல் இல்லை - Windows Settings > Speech-ல் Tamil நிறுவவும்</option>'}
-speechSynthesis.onvoiceschanged=lv;lv();
-function speak(t){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ta-IN';
- const v=voices[$('voice').value||0];if(v)u.voice=v;u.rate=+$('spd').value;speechSynthesis.speak(u)}
-$('on').onclick=()=>{ready=true;speak('தமிழ் டப்பிங் தயார்');$('on').style.display='none'};
-async function tr(t){if(cache[t])return cache[t];const r=await fetch(API+'?tr='+encodeURIComponent(t));const j=await r.json();if(j.error)throw j.error;return cache[t]=j.t}
-let cur='';
-addEventListener('message',async e=>{
- if(e.origin!==YT)return;const d=e.data||{};
- if(d.type==='stop'){speechSynthesis.cancel();return}
- if(d.type!=='cap')return;
- cur=d.t;
- try{const ta=await tr(d.t);if(cur!==d.t)return;$('tx').textContent=ta;
-  e.source.postMessage({type:'tr',t:ta},e.origin);if(ready)speak(ta)}
- catch(err){$('tx').textContent='பிழை: '+err}
-});
-</script></body></html>
+var $=function(i){return document.getElementById(i)};
+var LS=function(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+var DEFAULT_GAS='https://script.google.com/macros/s/AKfycbxZg_sLQuR206I6WXwk-z0DrX-0mpkYKyY9P3meS4h-oZ0ennwrRxaFCuSh9nkNHIF_/exec';
+var player=null,lines=[],fs=parseInt(LS('fs'))||38,timer=null;
+$('sub').style.fontSize=fs+'px';
+
+function msg(t){$('msg').textContent=t||''}
+function vid(u){var m=u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/);return m?m[1]:(/^[\w-]{11}$/.test(u)?u:null)}
+
+function getGas(){
+  return LS('gas')||DEFAULT_GAS;
+}
+$('cfg').onclick=function(){var u=prompt('Apps Script Web App URL:',LS('gas')||'');if(u!==null)LS('gas',u.trim())};
+async function showList(){
+  var L=$('list');L.style.display='grid';$('bar').style.display='flex';L.innerHTML='';msg('பட்டியல் ஏற்றுகிறது…');
+  try{
+    var g=getGas(),r=await fetch(g+(g.indexOf('?')>-1?'&':'?')+'list=1'),j=await r.json();
+    if(!j.ok)throw j.error;
+    msg(j.items.length?'':'தயாரான வீடியோ இல்லை — கணினியில் 📺 பட்டன் அழுத்தவும்');
+    j.items.forEach(function(x){
+      var c=document.createElement('div');c.className='card';
+      var b=document.createElement('button');
+      b.innerHTML='<img src="https://i.ytimg.com/vi/'+x.id+'/mqdefault.jpg" alt=""><span></span>';
+      b.querySelector('span').textContent=x.title||x.id;
+      b.onclick=function(){$('url').value='https://youtu.be/'+x.id;L.style.display='none';$('go').click()};
+      var d=document.createElement('button');d.className='del';d.textContent='🗑 நீக்கு';var tm=null;
+      d.onclick=async function(){
+        if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='❓ உறுதி — மறுபடி அழுத்து';
+          tm=setTimeout(function(){d.dataset.sure='';d.textContent='🗑 நீக்கு'},4000);return}
+        clearTimeout(tm);d.textContent='நீக்குகிறது…';
+        try{var r=await fetch(g+(g.indexOf('?')>-1?'&':'?')+'del='+x.id),jj=await r.json();
+          if(!jj.ok)throw jj.error;LS('sub_'+x.id,'');c.remove()}
+        catch(e){d.textContent='❌ பிழை'}
+      };
+      c.appendChild(b);c.appendChild(d);L.appendChild(c);
+    });
+    var f=L.querySelector('button');if(f)f.focus();
+  }catch(e){msg('பட்டியல் பிழை: '+e)}
+}
+$('ls').onclick=showList;
+window.addEventListener('load',showList);
+$('hide').onclick=function(){$('bar').style.display='none';msg('')};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'||e.keyCode===461||e.keyCode===27)$('bar').style.display='flex'});
+$('sm').onclick=function(){fs=Math.max(20,fs-4);LS('fs',fs);$('sub').style.fontSize=fs+'px'};
+$('lg').onclick=function(){fs=Math.min(80,fs+4);LS('fs',fs);$('sub').style.fontSize=fs+'px'};
+
+async function load(id){
+  var key='sub_'+id,c=LS(key);
+  if(c){try{return JSON.parse(c)}catch(e){}}
+  var g=getGas();if(!g)throw 'URL தேவை';
+  var r=await fetch(g+(g.indexOf('?')>-1?'&':'?')+'id='+id);
+  var j=await r.json();
+  if(!j.ok)throw j.error;
+  LS(key,JSON.stringify(j.lines));
+  return j.lines;
+}
+
+$('go').onclick=async function(){
+  $('list').style.display='none';
+  var id=vid($('url').value.trim());
+  if(!id){msg('சரியான YouTube லிங்க் இல்லை');return}
+  msg('தமிழ் சப்டைட்டில் தயாராகிறது… (சில நிமிடங்கள் ஆகலாம்)');
+  $('go').disabled=true;
+  try{lines=await load(id);msg('')}catch(e){lines=[];msg('பிழை: '+e)}
+  $('go').disabled=false;
+  if(!window.YT||!YT.Player){msg('பிளேயர் ஏற்றப்படவில்லை — இணையத்தைச் சரிபார்க்கவும்');return}
+  if(player&&player.loadVideoById){player.loadVideoById(id)}
+  else{player=new YT.Player('pl',{videoId:id,playerVars:{autoplay:1,cc_load_policy:0,fs:0,rel:0,playsinline:1},
+    events:{onReady:function(e){e.target.playVideo()}}})}
+  clearInterval(timer);
+  timer=setInterval(tick,200);
+  if(lines.length)setTimeout(function(){$('bar').style.display='none'},1500);
+};
+
+function tick(){
+  if(!player||!player.getCurrentTime)return;
+  var t=player.getCurrentTime(),s=document.querySelector('#sub span'),txt='';
+  for(var i=0;i<lines.length;i++){var l=lines[i];if(t>=l.s&&t<l.s+l.d){txt=l.t;break}if(l.s>t)break}
+  s.textContent=txt;s.style.display=txt?'inline':'none';
+}
+</script>
+</body>
+</html>
